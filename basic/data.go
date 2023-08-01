@@ -30,3 +30,7 @@ var DemoUser = User{
 	IsFollow:      false,
 	WorkCount:     1,
 }
+
+var userIdSeq int64 = 1
+
+var userInfoList = map[string]User{}
