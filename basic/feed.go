@@ -15,11 +15,18 @@ type FeedResponse struct {
 	VideoList  []Video `json:"video_list,omitempty"` // 视频列表
 }
 
+/*
+视频流接口
+
+不限制登录状态，返回按投稿时间倒序的视频列表，视频数由服务端控制，单次最多30个
+*/
 func Feed(c *gin.Context) {
 	latest, err := strconv.ParseInt(c.Query("latest_time"), 10, 64)
+	// 限制返回视频的最新投稿时间戳，不填表示当前时间
 	if err != nil {
 		latest = time.Now().Unix()
 	}
+	// TODO
 	videolist, err := getVideoList(latest)
 	if err != nil {
 		videolist = DemoVideos
