@@ -27,10 +27,7 @@ func Feed(c *gin.Context) {
 		latest = time.Now().Unix()
 	}
 	// TODO
-	videolist, err := getVideoList(latest)
-	if err != nil {
-		videolist = DemoVideos
-	}
+	videolist := getVideoList(latest)
 	c.JSON(http.StatusOK, FeedResponse{
 		NextTime:   latest,
 		StatusCode: 0,
@@ -39,7 +36,7 @@ func Feed(c *gin.Context) {
 	})
 }
 
-func getVideoList(latest_time int64) ([]Video, error) {
+func getVideoList(latest_time int64) []Video {
 	// TODO
-	return DemoVideos, nil
+	return videoList
 }

@@ -1,36 +1,70 @@
 package basic
 
-var DemoVideos = []Video{
-	{
-		ID:            1,
-		Author:        DemoUser,
-		PlayURL:       "https://www.w3schools.com/html/movie.mp4",
-		CoverURL:      "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_1280.jpg",
-		FavoriteCount: 0,
-		CommentCount:  0,
-		IsFavorite:    false,
-		Title:         "Bear",
-	},
-}
+import (
+	"encoding/json"
+	"io/fs"
+	"log"
+	"os"
+)
 
-var DemoComments = []Comment{
-	{
-		Id:         1,
-		User:       DemoUser,
-		Content:    "Test Comment",
-		CreateDate: "05-01",
-	},
-}
-
-var DemoUser = User{
-	ID:            1,
-	Name:          "TestUser",
-	FollowCount:   0,
-	FollowerCount: 0,
-	IsFollow:      false,
-	WorkCount:     1,
-}
-
-var userIdSeq int64 = 1
+var videoList = []Video{}
 
 var userInfoList = map[string]User{}
+
+var userIdSeq int64 = 0
+
+var videoIdSeq int64 = 0
+
+func saveVideoList() {
+	data, err := json.MarshalIndent(videoList, "", "   ")
+	if err != nil {
+		log.Fatal("Failed to conver json")
+		return
+	}
+	err = os.WriteFile("table/video.json", data, fs.FileMode(os.O_RDWR|os.O_CREATE))
+	if err != nil {
+		log.Fatal("Failed to write file")
+		return
+	}
+}
+
+func ReadVideoList() {
+	file, err := os.ReadFile("table/video.json")
+	if err != nil {
+		log.Fatal("Failed to read file")
+		return
+	}
+	err = json.Unmarshal(file, &videoList)
+	if err != nil {
+		log.Fatal("Failed to unmarshal file")
+		return
+	}
+	videoIdSeq = int64(len(videoList))
+}
+
+func saveUserInfo() {
+	data, err := json.MarshalIndent(userInfoList, "", "   ")
+	if err != nil {
+		log.Fatal("Failed to conver json")
+		return
+	}
+	err = os.WriteFile("table/user.json", data, fs.FileMode(os.O_RDWR|os.O_CREATE))
+	if err != nil {
+		log.Fatal("Failed to write file")
+		return
+	}
+}
+
+func ReadUserInfo() {
+	file, err := os.ReadFile("table/user.json")
+	if err != nil {
+		log.Fatal("Failed to read file")
+		return
+	}
+	err = json.Unmarshal(file, &userInfoList)
+	if err != nil {
+		log.Fatal("Failed to unmarshal file")
+		return
+	}
+	userIdSeq = int64(len(userInfoList))
+}

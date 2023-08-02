@@ -29,7 +29,7 @@ type InfoRespon struct {
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-
+	defer saveUserInfo()
 	if isExist(username) {
 		c.JSON(http.StatusOK, UserRespon{
 			StatusCode: 1,
