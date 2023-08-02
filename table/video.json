@@ -1,0 +1,19 @@
+[
+   {
+      "author": {
+         "follow_count": 0,
+         "follower_count": 0,
+         "id": 1,
+         "is_follow": false,
+         "name": "1",
+         "work_count": 1
+      },
+      "comment_count": 0,
+      "cover_url": "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_1280.jpg",
+      "favorite_count": 0,
+      "id": 1,
+      "is_favorite": false,
+      "play_url": "https://www.w3schools.com/html/movie.mp4",
+      "title": "Bear"
+   }
+]
