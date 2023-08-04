@@ -1,5 +1,7 @@
 package basic
 
+import "fmt"
+
 type Respon struct {
 	StatusCode int64  `json:"status_code"` // 状态码，0-成功，其他值-失败
 	StatusMsg  string `json:"status_msg"`  // 返回状态描述
@@ -16,6 +18,10 @@ type Video struct {
 	Title         string `json:"title"`               // 视频标题
 }
 
+func (v Video) String() string {
+	return fmt.Sprintf("ID: %d\nAuther: %s\nTitle: %s\nURL:%s", v.ID, v.Author.Name, v.Title, v.PlayURL)
+}
+
 // 视频作者信息
 type User struct {
 	Avatar          string `json:"avatar,omitempty"`           // 用户头像
@@ -29,6 +35,10 @@ type User struct {
 	Signature       string `json:"signature,omitempty"`        // 个人简介
 	TotalFavorited  string `json:"total_favorited,omitempty"`  // 获赞数量
 	WorkCount       int64  `json:"work_count"`                 // 作品数
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("ID: %d\nName: %s\nWorkCount%d", u.ID, u.Name, u.WorkCount)
 }
 
 type Comment struct {
