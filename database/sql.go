@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/Mrhunderb/douyin/basic"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -18,7 +18,7 @@ func TestConnection() {
 	db.Close()
 }
 
-func QueryUserToken(token string) (*basic.User, error) {
+func QueryUserToken(token string) (*User, error) {
 	db, err := connect()
 
 	if err != nil {
@@ -32,7 +32,7 @@ func QueryUserToken(token string) (*basic.User, error) {
 	return queryUser(db, row)
 }
 
-func QueryUserID(id int64) (*basic.User, error) {
+func QueryUserID(id int64) (*User, error) {
 	db, err := connect()
 
 	if err != nil {
@@ -46,8 +46,8 @@ func QueryUserID(id int64) (*basic.User, error) {
 	return queryUser(db, row)
 }
 
-func queryUser(db *sql.DB, row *sql.Row) (*basic.User, error) {
-	var user basic.User
+func queryUser(db *sql.DB, row *sql.Row) (*User, error) {
+	var user User
 	var token string
 	// 这些字段在数据库中可以为空，导致row.Scan出错
 	var (
@@ -70,6 +70,48 @@ func queryUser(db *sql.DB, row *sql.Row) (*basic.User, error) {
 	user.Signature = Signature.String
 	user.TotalFavorited = TotalFavorited.String
 	return &user, nil
+}
+
+func QueryVideo(last_time int64) (*[]Video, error) {
+	db, err := connect()
+	var videolist []Video
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	time_str := time.Unix(last_time, 0).Format("2006-01-02 15:04:05")
+	if err != nil {
+		return nil, err
+	}
+	var rows *sql.Rows
+	if len(time_str) > 19 {
+		rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str[1:])
+	} else {
+		rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str)
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			video       Video
+			author_id   int64
+			cover_url   sql.NullString
+			upload_time string
+		)
+		err = rows.Scan(&video.ID, &author_id, &video.Title,
+			&video.IsFavorite, &video.CommentCount, &video.FavoriteCount,
+			&video.PlayURL, &cover_url, &upload_time)
+		if err != nil {
+			return nil, err
+		}
+		author, _ := QueryUserID(author_id)
+		video.Author = *author
+		video.CoverURL = cover_url.String
+		videolist = append(videolist, video)
+	}
+	return &videolist, nil
 }
 
 func connect() (*sql.DB, error) {

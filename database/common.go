@@ -1,11 +1,6 @@
-package basic
+package database
 
 import "fmt"
-
-type Respon struct {
-	StatusCode int64  `json:"status_code"` // 状态码，0-成功，其他值-失败
-	StatusMsg  string `json:"status_msg"`  // 返回状态描述
-}
 
 type Video struct {
 	Author        User   `json:"author"`              // 视频作者信息

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/Mrhunderb/douyin/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,9 +17,9 @@ type UserRespon struct {
 }
 
 type InfoRespon struct {
-	StatusCode int64  `json:"status_code"`    // 状态码，0-成功，其他值-失败
-	StatusMsg  string `json:"status_msg"`     // 返回状态描述
-	User       User   `json:"user,omitempty"` // 用户信息
+	StatusCode int64         `json:"status_code"`    // 状态码，0-成功，其他值-失败
+	StatusMsg  string        `json:"status_msg"`     // 返回状态描述
+	User       database.User `json:"user,omitempty"` // 用户信息
 }
 
 /*
@@ -38,7 +39,7 @@ func Register(c *gin.Context) {
 	} else {
 		id := atomic.AddInt64(&userIdSeq, 1)
 		token := username + password
-		userInfoList[token] = User{
+		userInfoList[token] = database.User{
 			ID:            id,
 			Name:          username,
 			IsFollow:      false,

@@ -6,9 +6,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync/atomic"
+	"time"
 
+	"github.com/Mrhunderb/douyin/database"
 	"github.com/gin-gonic/gin"
 )
+
+type Respon struct {
+	StatusCode int64  `json:"status_code"` // 状态码，0-成功，其他值-失败
+	StatusMsg  string `json:"status_msg"`  // 返回状态描述
+}
 
 /*
 投稿接口
@@ -50,7 +57,7 @@ func Publish(c *gin.Context) {
 	user.WorkCount++
 	userInfoList[token] = user
 	id := atomic.AddInt64(&videoIdSeq, 1)
-	videoList = append(videoList, Video{
+	videoList = append(videoList, database.Video{
 		Author:        user,
 		CommentCount:  0,
 		FavoriteCount: 0,
@@ -66,9 +73,9 @@ func Publish(c *gin.Context) {
 }
 
 type PublishRespon struct {
-	StatusCode int64   `json:"status_code"` // 状态码，0-成功，其他值-失败
-	StatusMsg  *string `json:"status_msg"`  // 返回状态描述
-	VideoList  []Video `json:"video_list"`  // 用户发布的视频列表
+	StatusCode int64            `json:"status_code"` // 状态码，0-成功，其他值-失败
+	StatusMsg  *string          `json:"status_msg"`  // 返回状态描述
+	VideoList  []database.Video `json:"video_list"`  // 用户发布的视频列表
 }
 
 /*
@@ -102,12 +109,11 @@ func PublishList(c *gin.Context) {
 	})
 }
 
-func getPublishList(ID int64) []Video {
-	var list []Video
-	for _, video := range videoList {
-		if video.Author.ID == ID {
-			list = append(list, video)
-		}
+func getPublishList(ID int64) []database.Video {
+	list, err := database.QueryVideo(time.Now().Unix())
+	if err != nil {
+		fmt.Println(err)
+		return nil
 	}
-	return list
+	return *list
 }
