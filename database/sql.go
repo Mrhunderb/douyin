@@ -18,6 +18,37 @@ func TestConnection() {
 	db.Close()
 }
 
+/*
+将数据库中指定用户的work_count字段加1
+*/
+func UpdateUserWorkcount(username string) error {
+	db, err := connect()
+
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.Exec("UPDATE users SET work_count = work_count + 1 WHERE name = ?", username)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func InsertVideo(user_id int64, title, url string) error {
+	db, err := connect()
+
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT INTO video (user_id, title, play_url) VALUE (?, ?, ?)", user_id, title, url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func InsertUser(name, token string) (*User, error) {
 	db, err := connect()
 

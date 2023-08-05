@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"github.com/Mrhunderb/douyin/database"
@@ -25,9 +24,8 @@ type Respon struct {
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
 	title := c.PostForm("title")
-	defer saveVideoList()
-	defer saveUserInfo()
-	if _, exist := userInfoList[token]; !exist {
+	user, err := database.QueryUserToken(token)
+	if err != nil {
 		c.JSON(http.StatusOK, Respon{
 			StatusCode: 1,
 			StatusMsg:  "User doesn't exist",
@@ -44,7 +42,6 @@ func Publish(c *gin.Context) {
 		return
 	}
 	filename := data.Filename
-	user := userInfoList[token]
 	finalname := fmt.Sprintf("%d_%s", user.ID, filename)
 	savefile := filepath.Join("./public/", finalname)
 	if err := c.SaveUploadedFile(data, savefile); err != nil {
@@ -54,22 +51,20 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-	user.WorkCount++
-	userInfoList[token] = user
-	id := atomic.AddInt64(&videoIdSeq, 1)
-	videoList = append(videoList, database.Video{
-		Author:        user,
-		CommentCount:  0,
-		FavoriteCount: 0,
-		ID:            id,
-		IsFavorite:    false,
-		Title:         title,
-		PlayURL:       "http://" + c.Request.Host + "/static/" + finalname,
-	})
-	c.JSON(http.StatusOK, Respon{
-		StatusCode: 0,
-		StatusMsg:  filename + " uploaded successfully",
-	})
+	database.UpdateUserWorkcount(user.Name)
+	url := "http://" + c.Request.Host + "/static/" + finalname
+	err = database.InsertVideo(user.ID, title, url)
+	if err != nil {
+		c.JSON(http.StatusOK, Respon{
+			StatusCode: 1,
+			StatusMsg:  filename + " uploaded failed",
+		})
+	} else {
+		c.JSON(http.StatusOK, Respon{
+			StatusCode: 0,
+			StatusMsg:  filename + " uploaded successfully",
+		})
+	}
 }
 
 type PublishRespon struct {
