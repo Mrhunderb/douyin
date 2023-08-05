@@ -18,6 +18,35 @@ func TestConnection() {
 	db.Close()
 }
 
+func InsertUser(name, token string) (*User, error) {
+	db, err := connect()
+
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	result, err := db.Exec("INSERT INTO users (name, token) VALUE (?, ?)", name, token)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(result)
+	return QueryUserName(name)
+}
+
+func QueryUserName(name string) (*User, error) {
+	db, err := connect()
+
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	row := db.QueryRow("SELECT * FROM users WHERE name = ?", name)
+	if err != nil {
+		return nil, err
+	}
+	return queryUser(db, row)
+}
+
 func QueryUserToken(token string) (*User, error) {
 	db, err := connect()
 
