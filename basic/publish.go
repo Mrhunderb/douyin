@@ -3,6 +3,7 @@ package basic
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 
@@ -42,6 +43,7 @@ func Publish(c *gin.Context) {
 	}
 	filename := data.Filename
 	finalname := fmt.Sprintf("%d_%s", user.ID, filename)
+	creatFolder("./public/")
 	savefile := filepath.Join("./public/", finalname)
 	if err := c.SaveUploadedFile(data, savefile); err != nil {
 		c.JSON(http.StatusOK, Respon{
@@ -63,6 +65,18 @@ func Publish(c *gin.Context) {
 			StatusCode: 0,
 			StatusMsg:  filename + " uploaded successfully",
 		})
+	}
+}
+
+func creatFolder(folderPath string) {
+	_, err := os.Stat(folderPath)
+	if os.IsNotExist(err) {
+		// 文件夹不存在，创建文件夹
+		err := os.Mkdir(folderPath, 0755)
+		if err != nil {
+			fmt.Println("Error creating folder:", err)
+			return
+		}
 	}
 }
 
