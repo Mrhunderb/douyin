@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"time"
 
 	"github.com/Mrhunderb/douyin/database"
 	"github.com/gin-gonic/gin"
@@ -81,7 +80,8 @@ type PublishRespon struct {
 func PublishList(c *gin.Context) {
 	token := c.Query("token")
 	id_str := c.Query("user_id")
-	if _, exist := userInfoList[token]; !exist {
+	_, err := database.QueryUserToken(token)
+	if err != nil {
 		c.JSON(http.StatusOK, Respon{
 			StatusCode: 1,
 			StatusMsg:  "User doesn't exist",
@@ -105,7 +105,7 @@ func PublishList(c *gin.Context) {
 }
 
 func getPublishList(ID int64) []database.Video {
-	list, err := database.QueryVideo(time.Now().Unix())
+	list, err := database.QueryVideoID(ID)
 	if err != nil {
 		fmt.Println(err)
 		return nil

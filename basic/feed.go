@@ -40,7 +40,7 @@ func Feed(c *gin.Context) {
 
 func getVideoList(latest_time int64) []database.Video {
 	// TODO
-	videoL, err := database.QueryVideo(latest_time)
+	videoL, err := database.QueryVideoTime(latest_time)
 	if err != nil {
 		fmt.Println(err)
 		return nil

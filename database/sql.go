@@ -132,9 +132,22 @@ func queryUser(db *sql.DB, row *sql.Row) (*User, error) {
 	return &user, nil
 }
 
-func QueryVideo(last_time int64) (*[]Video, error) {
+func QueryVideoID(user_id int64) (*[]Video, error) {
 	db, err := connect()
-	var videolist []Video
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	var rows *sql.Rows
+	rows, err = db.Query("SELECT * FROM video WHERE user_id = ? ORDER BY upload_time DESC", user_id)
+	if err != nil {
+		return nil, err
+	}
+	return queryVideo(db, rows)
+}
+
+func QueryVideoTime(last_time int64) (*[]Video, error) {
+	db, err := connect()
 	if err != nil {
 		return nil, err
 	}
@@ -144,14 +157,15 @@ func QueryVideo(last_time int64) (*[]Video, error) {
 		return nil, err
 	}
 	var rows *sql.Rows
-	if len(time_str) > 19 {
-		rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str[1:])
-	} else {
-		rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str)
-	}
+	rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str[1:])
 	if err != nil {
 		return nil, err
 	}
+	return queryVideo(db, rows)
+}
+
+func queryVideo(db *sql.DB, rows *sql.Rows) (*[]Video, error) {
+	var videolist []Video
 	defer rows.Close()
 	for rows.Next() {
 		var (
@@ -160,7 +174,7 @@ func QueryVideo(last_time int64) (*[]Video, error) {
 			cover_url   sql.NullString
 			upload_time string
 		)
-		err = rows.Scan(&video.ID, &author_id, &video.Title,
+		err := rows.Scan(&video.ID, &author_id, &video.Title,
 			&video.IsFavorite, &video.CommentCount, &video.FavoriteCount,
 			&video.PlayURL, &cover_url, &upload_time)
 		if err != nil {
