@@ -15,6 +15,8 @@ func TestConnection() {
 		log.Fatal(err)
 	}
 	fmt.Println("Connected to MySQL database!")
+	CreateTable(userTable)
+	CreateTable(videoTable)
 	db.Close()
 }
 
@@ -186,6 +188,16 @@ func queryVideo(db *sql.DB, rows *sql.Rows) (*[]Video, error) {
 		videolist = append(videolist, video)
 	}
 	return &videolist, nil
+}
+
+func CreateTable(table string) {
+	db, err := connect()
+	_, err = db.Exec(table)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Table created successfully.")
 }
 
 func connect() (*sql.DB, error) {
