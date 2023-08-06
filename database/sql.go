@@ -134,6 +134,9 @@ func queryUser(db *sql.DB, row *sql.Row) (*User, error) {
 	return &user, nil
 }
 
+/*
+返回数据库中所有由用户user_id上传的视频(按时间倒序)
+*/
 func QueryVideoID(user_id int64) (*[]Video, error) {
 	db, err := connect()
 	if err != nil {
@@ -148,6 +151,9 @@ func QueryVideoID(user_id int64) (*[]Video, error) {
 	return queryVideo(db, rows)
 }
 
+/*
+返回数据库中所有返回最新投稿时间小于last_time的视频(按时间倒序)
+*/
 func QueryVideoTime(last_time int64) (*[]Video, error) {
 	db, err := connect()
 	if err != nil {
@@ -159,7 +165,7 @@ func QueryVideoTime(last_time int64) (*[]Video, error) {
 		return nil, err
 	}
 	var rows *sql.Rows
-	rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str[1:])
+	rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str)
 	if err != nil {
 		return nil, err
 	}
