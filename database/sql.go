@@ -192,6 +192,9 @@ func queryVideo(db *sql.DB, rows *sql.Rows) (*[]Video, error) {
 
 func CreateTable(table string) {
 	db, err := connect()
+	if err != nil {
+		log.Fatal(err)
+	}
 	_, err = db.Exec(table)
 	if err != nil {
 		log.Fatal(err)
