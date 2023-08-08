@@ -38,6 +38,7 @@ func FavoriteAction(c *gin.Context) {
 	}
 	if strings.Compare(action, "1") == 0 {
 		err = database.InsertFavorite(token, id)
+		database.UpdateVideoFavorite(id)
 		if err != nil {
 			fmt.Println(err.Error())
 			c.JSON(http.StatusOK, Respon{

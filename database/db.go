@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS users(
 var favoriteTable = `
 CREATE TABLE IF NOT EXISTS favorite(
 	token VARCHAR(100) NOT NULL,
-	video_id BIGINT NOT NULL
+	video_id BIGINT NOT NULL,
 	PRIMARY KEY (token, video_id),
 	favorite_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )

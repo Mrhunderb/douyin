@@ -17,6 +17,7 @@ func TestConnection() {
 	fmt.Println("Connected to MySQL database!")
 	CreateTable(userTable)
 	CreateTable(videoTable)
+	CreateTable(favoriteTable)
 	db.Close()
 }
 
@@ -132,6 +133,20 @@ func queryUser(db *sql.DB, row *sql.Row) (*User, error) {
 	user.Signature = Signature.String
 	user.TotalFavorited = TotalFavorited.String
 	return &user, nil
+}
+
+func UpdateVideoFavorite(video_id int64) error {
+	db, err := connect()
+
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.Exec("UPDATE video SET favorite_count = favorite_count + 1 WHERE id = ?", video_id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 /*
