@@ -196,6 +196,51 @@ func queryVideo(db *sql.DB, rows *sql.Rows) (*[]Video, error) {
 	return &videolist, nil
 }
 
+func InsertFavorite(token string, video_id int64) error {
+	db, err := connect()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.Exec("INSERT INTO favorite (token, video_id) VALUES (?, ?)", token, video_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeletFavorite(token string, video_id int64) error {
+	db, err := connect()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.Exec("DELETE FROM favorite WHERE video_id = ? && token = ?", video_id, token)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func QueryFavorite(token string) (*[]Video, error) {
+	db, err := connect()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	var rows *sql.Rows
+	query := `
+	SELECT * FROM video WHERE id IN (
+		SELECT video_id FROM favorite WHERE token = ? ORDER BY favorite_time DESC 
+	)
+	`
+	rows, err = db.Query(query, token)
+	if err != nil {
+		return nil, err
+	}
+	return queryVideo(db, rows)
+}
+
 func CreateTable(table string) {
 	db, err := connect()
 	if err != nil {

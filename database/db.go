@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS video (
 	favorite_count BIGINT NOT NULL DEFAULT 0,
 	play_url VARCHAR(500) NOT NULL,
 	cover_url VARCHAR(500),
-	upload_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	upload_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 `
 
@@ -35,5 +35,14 @@ CREATE TABLE IF NOT EXISTS users(
 	favorite_count BIGINT,
 	signature VARCHAR(255),
 	total_favotited VARCHAR(20)
+)
+`
+
+var favoriteTable = `
+CREATE TABLE IF NOT EXISTS favorite(
+	token VARCHAR(100) NOT NULL,
+	video_id BIGINT NOT NULL
+	PRIMARY KEY (token, video_id),
+	favorite_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 `
