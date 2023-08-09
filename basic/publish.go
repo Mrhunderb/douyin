@@ -82,7 +82,7 @@ func creatFolder(folderPath string) {
 
 type PublishRespon struct {
 	StatusCode int64            `json:"status_code"` // 状态码，0-成功，其他值-失败
-	StatusMsg  *string          `json:"status_msg"`  // 返回状态描述
+	StatusMsg  string           `json:"status_msg"`  // 返回状态描述
 	VideoList  []database.Video `json:"video_list"`  // 用户发布的视频列表
 }
 
@@ -110,16 +110,16 @@ func PublishList(c *gin.Context) {
 		})
 		return
 	}
-	publish := getPublishList(id)
-	c.JSON(http.StatusOK, FeedResponse{
+	publish := getPublishList(token, id)
+	c.JSON(http.StatusOK, PublishRespon{
 		StatusCode: 0,
 		StatusMsg:  "",
 		VideoList:  publish,
 	})
 }
 
-func getPublishList(ID int64) []database.Video {
-	list, err := database.QueryVideoID(ID)
+func getPublishList(token string, ID int64) []database.Video {
+	list, err := database.QueryVideoID(token, ID)
 	if err != nil {
 		fmt.Println(err)
 		return nil

@@ -28,7 +28,8 @@ func Feed(c *gin.Context) {
 	if err != nil {
 		latest = time.Now().Unix()
 	}
-	videolist := getVideoList(latest)
+	token := c.Query("token")
+	videolist := getVideoList(latest, token)
 	c.JSON(http.StatusOK, FeedResponse{
 		NextTime:   latest,
 		StatusCode: 0,
@@ -37,12 +38,12 @@ func Feed(c *gin.Context) {
 	})
 }
 
-func getVideoList(latest_time int64) []database.Video {
+func getVideoList(latest_time int64, token string) []database.Video {
 	// MySQL时间timestamp类型的最大值
 	if latest_time > 2147483647 {
 		latest_time = 2147483647
 	}
-	videoL, err := database.QueryVideoTime(latest_time)
+	videoL, err := database.QueryVideoTime(token, latest_time)
 	if err != nil {
 		fmt.Println(err)
 		return nil

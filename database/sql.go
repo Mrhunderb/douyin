@@ -31,7 +31,12 @@ func UpdateUserWorkcount(username string) error {
 		return err
 	}
 	defer db.Close()
-	_, err = db.Exec("UPDATE users SET work_count = work_count + 1 WHERE name = ?", username)
+	update := `
+	UPDATE users 
+	SET work_count = work_count + 1 
+	WHERE name = ?
+	`
+	_, err = db.Exec(update, username)
 	if err != nil {
 		return err
 	}
@@ -45,7 +50,11 @@ func InsertVideo(user_id int64, title, url string) error {
 		return err
 	}
 	defer db.Close()
-	_, err = db.Exec("INSERT INTO video (user_id, title, play_url) VALUE (?, ?, ?)", user_id, title, url)
+	insert := `
+	INSERT INTO video (user_id, title, play_url) 
+	VALUE (?, ?, ?)
+	`
+	_, err = db.Exec(insert, user_id, title, url)
 	if err != nil {
 		return err
 	}
@@ -135,14 +144,38 @@ func queryUser(db *sql.DB, row *sql.Row) (*User, error) {
 	return &user, nil
 }
 
-func UpdateVideoFavorite(video_id int64) error {
+func DecVideoFavorite(video_id int64) error {
 	db, err := connect()
 
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	_, err = db.Exec("UPDATE video SET favorite_count = favorite_count + 1 WHERE id = ?", video_id)
+	update := `
+	UPDATE video 
+	SET favorite_count = favorite_count - 1 
+	WHERE id = ?
+	`
+	_, err = db.Exec(update, video_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func IncVideoFavorite(video_id int64) error {
+	db, err := connect()
+
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	update := `
+	UPDATE video 
+	SET favorite_count = favorite_count + 1 
+	WHERE id = ?
+	`
+	_, err = db.Exec(update, video_id)
 	if err != nil {
 		return err
 	}
@@ -152,24 +185,29 @@ func UpdateVideoFavorite(video_id int64) error {
 /*
 返回数据库中所有由用户user_id上传的视频(按时间倒序)
 */
-func QueryVideoID(user_id int64) (*[]Video, error) {
+func QueryVideoID(token string, user_id int64) (*[]Video, error) {
 	db, err := connect()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 	var rows *sql.Rows
-	rows, err = db.Query("SELECT * FROM video WHERE user_id = ? ORDER BY upload_time DESC", user_id)
+	query := `
+	SELECT * FROM video 
+	WHERE user_id = ? 
+	ORDER BY upload_time DESC
+	`
+	rows, err = db.Query(query, user_id)
 	if err != nil {
 		return nil, err
 	}
-	return queryVideo(db, rows)
+	return queryVideo(db, rows, token)
 }
 
 /*
 返回数据库中所有返回最新投稿时间小于last_time的视频(按时间倒序)
 */
-func QueryVideoTime(last_time int64) (*[]Video, error) {
+func QueryVideoTime(token string, last_time int64) (*[]Video, error) {
 	db, err := connect()
 	if err != nil {
 		return nil, err
@@ -180,14 +218,20 @@ func QueryVideoTime(last_time int64) (*[]Video, error) {
 		return nil, err
 	}
 	var rows *sql.Rows
-	rows, err = db.Query("SELECT * FROM video WHERE upload_time < ? ORDER BY upload_time DESC", time_str)
+	query := `
+	SELECT * FROM video 
+	WHERE upload_time < ? 
+	ORDER BY upload_time DESC
+	LIMIT 30
+	`
+	rows, err = db.Query(query, time_str)
 	if err != nil {
 		return nil, err
 	}
-	return queryVideo(db, rows)
+	return queryVideo(db, rows, token)
 }
 
-func queryVideo(db *sql.DB, rows *sql.Rows) (*[]Video, error) {
+func queryVideo(db *sql.DB, rows *sql.Rows, token string) (*[]Video, error) {
 	var videolist []Video
 	defer rows.Close()
 	for rows.Next() {
@@ -198,7 +242,7 @@ func queryVideo(db *sql.DB, rows *sql.Rows) (*[]Video, error) {
 			upload_time string
 		)
 		err := rows.Scan(&video.ID, &author_id, &video.Title,
-			&video.IsFavorite, &video.CommentCount, &video.FavoriteCount,
+			&video.CommentCount, &video.FavoriteCount,
 			&video.PlayURL, &cover_url, &upload_time)
 		if err != nil {
 			return nil, err
@@ -206,6 +250,7 @@ func queryVideo(db *sql.DB, rows *sql.Rows) (*[]Video, error) {
 		author, _ := QueryUserID(author_id)
 		video.Author = *author
 		video.CoverURL = cover_url.String
+		video.IsFavorite = IsFavorite(token, video.ID)
 		videolist = append(videolist, video)
 	}
 	return &videolist, nil
@@ -237,6 +282,26 @@ func DeletFavorite(token string, video_id int64) error {
 	return nil
 }
 
+func IsFavorite(token string, video_id int64) bool {
+	db, err := connect()
+	if err != nil {
+		return false
+	}
+	defer db.Close()
+	query := "SELECT COUNT(*) FROM favorite WHERE token = ? && video_id = ?"
+	var count int
+	err = db.QueryRow(query, token, video_id).Scan(&count)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	if count > 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
 func QueryFavorite(token string) (*[]Video, error) {
 	db, err := connect()
 	if err != nil {
@@ -253,7 +318,7 @@ func QueryFavorite(token string) (*[]Video, error) {
 	if err != nil {
 		return nil, err
 	}
-	return queryVideo(db, rows)
+	return queryVideo(db, rows, token)
 }
 
 func CreateTable(table string) {
