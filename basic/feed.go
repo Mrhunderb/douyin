@@ -1,18 +1,20 @@
 package basic
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/Mrhunderb/douyin/database"
 	"github.com/gin-gonic/gin"
 )
 
 type FeedResponse struct {
-	NextTime   int64   `json:"next_time,omitempty"`  // 本次返回的视频中，发布最早的时间，作为下次请求时的latest_time
-	StatusCode int64   `json:"status_code"`          // 状态码，0-成功，其他值-失败
-	StatusMsg  string  `json:"status_msg"`           // 返回状态描述
-	VideoList  []Video `json:"video_list,omitempty"` // 视频列表
+	NextTime   int64            `json:"next_time,omitempty"`  // 本次返回的视频中，发布最早的时间，作为下次请求时的latest_time
+	StatusCode int64            `json:"status_code"`          // 状态码，0-成功，其他值-失败
+	StatusMsg  string           `json:"status_msg"`           // 返回状态描述
+	VideoList  []database.Video `json:"video_list,omitempty"` // 视频列表
 }
 
 /*
@@ -26,8 +28,8 @@ func Feed(c *gin.Context) {
 	if err != nil {
 		latest = time.Now().Unix()
 	}
-	// TODO
-	videolist := getVideoList(latest)
+	token := c.Query("token")
+	videolist := getVideoList(latest, token)
 	c.JSON(http.StatusOK, FeedResponse{
 		NextTime:   latest,
 		StatusCode: 0,
@@ -36,7 +38,15 @@ func Feed(c *gin.Context) {
 	})
 }
 
-func getVideoList(latest_time int64) []Video {
-	// TODO
-	return videoList
+func getVideoList(latest_time int64, token string) []database.Video {
+	// MySQL时间timestamp类型的最大值
+	if latest_time > 2147483647 {
+		latest_time = 2147483647
+	}
+	videoL, err := database.QueryVideoTime(token, latest_time)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return *videoL
 }

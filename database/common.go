@@ -1,9 +1,6 @@
-package basic
+package database
 
-type Respon struct {
-	StatusCode int64  `json:"status_code"` // 状态码，0-成功，其他值-失败
-	StatusMsg  string `json:"status_msg"`  // 返回状态描述
-}
+import "fmt"
 
 type Video struct {
 	Author        User   `json:"author"`              // 视频作者信息
@@ -14,6 +11,10 @@ type Video struct {
 	IsFavorite    bool   `json:"is_favorite"`         // true-已点赞，false-未点赞
 	PlayURL       string `json:"play_url"`            // 视频播放地址
 	Title         string `json:"title"`               // 视频标题
+}
+
+func (v Video) String() string {
+	return fmt.Sprintf("ID: %d\nAuther: %s\nTitle: %s\nURL:%s", v.ID, v.Author.Name, v.Title, v.PlayURL)
 }
 
 // 视频作者信息
@@ -29,6 +30,10 @@ type User struct {
 	Signature       string `json:"signature,omitempty"`        // 个人简介
 	TotalFavorited  string `json:"total_favorited,omitempty"`  // 获赞数量
 	WorkCount       int64  `json:"work_count"`                 // 作品数
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("ID: %d\nName: %s\nWorkCount%d", u.ID, u.Name, u.WorkCount)
 }
 
 type Comment struct {

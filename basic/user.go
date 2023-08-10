@@ -2,9 +2,8 @@ package basic
 
 import (
 	"net/http"
-	"strings"
-	"sync/atomic"
 
+	"github.com/Mrhunderb/douyin/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,9 +15,9 @@ type UserRespon struct {
 }
 
 type InfoRespon struct {
-	StatusCode int64  `json:"status_code"`    // 状态码，0-成功，其他值-失败
-	StatusMsg  string `json:"status_msg"`     // 返回状态描述
-	User       User   `json:"user,omitempty"` // 用户信息
+	StatusCode int64         `json:"status_code"`    // 状态码，0-成功，其他值-失败
+	StatusMsg  string        `json:"status_msg"`     // 返回状态描述
+	User       database.User `json:"user,omitempty"` // 用户信息
 }
 
 /*
@@ -29,40 +28,28 @@ type InfoRespon struct {
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-	defer saveUserInfo()
-	if isExist(username) {
+	user, _ := database.QueryUserName(username)
+	if user != nil {
 		c.JSON(http.StatusOK, UserRespon{
 			StatusCode: 1,
 			StatusMsg:  "User already exist",
 		})
 	} else {
-		id := atomic.AddInt64(&userIdSeq, 1)
 		token := username + password
-		userInfoList[token] = User{
-			ID:            id,
-			Name:          username,
-			IsFollow:      false,
-			FollowCount:   0,
-			FollowerCount: 0,
-			WorkCount:     0,
+		user, err := database.InsertUser(username, token)
+		if err != nil {
+			c.JSON(http.StatusOK, UserRespon{
+				StatusCode: 1,
+				StatusMsg:  err.Error(),
+			})
 		}
 		c.JSON(http.StatusOK, UserRespon{
 			StatusCode: 0,
 			StatusMsg:  "",
-			UserID:     id,
+			UserID:     user.ID,
 			Token:      token,
 		})
 	}
-}
-
-func isExist(username string) bool {
-	// TODO
-	for _, user := range userInfoList {
-		if strings.Compare(username, user.Name) == 0 {
-			return true
-		}
-	}
-	return false
 }
 
 /*
@@ -74,7 +61,8 @@ func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 	token := username + password
-	if user, exist := userInfoList[token]; exist {
+	user, _ := database.QueryUserToken(token)
+	if user != nil {
 		c.JSON(http.StatusOK, UserRespon{
 			StatusCode: 0,
 			StatusMsg:  "",
@@ -97,11 +85,12 @@ func Login(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	user_id := c.Query("user_id")
 	token := c.Query("token")
-	if user, exist := userInfoList[token]; exist {
+	user, _ := database.QueryUserToken(token)
+	if user != nil {
 		c.JSON(http.StatusOK, InfoRespon{
 			StatusCode: 0,
 			StatusMsg:  "",
-			User:       user,
+			User:       *user,
 		})
 	} else {
 		msg := "User " + user_id + " doesn't exist"

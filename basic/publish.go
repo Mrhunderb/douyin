@@ -3,12 +3,18 @@ package basic
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
-	"sync/atomic"
 
+	"github.com/Mrhunderb/douyin/database"
 	"github.com/gin-gonic/gin"
 )
+
+type Respon struct {
+	StatusCode int64  `json:"status_code"` // 状态码，0-成功，其他值-失败
+	StatusMsg  string `json:"status_msg"`  // 返回状态描述
+}
 
 /*
 投稿接口
@@ -18,9 +24,8 @@ import (
 func Publish(c *gin.Context) {
 	token := c.PostForm("token")
 	title := c.PostForm("title")
-	defer saveVideoList()
-	defer saveUserInfo()
-	if _, exist := userInfoList[token]; !exist {
+	user, err := database.QueryUserToken(token)
+	if err != nil {
 		c.JSON(http.StatusOK, Respon{
 			StatusCode: 1,
 			StatusMsg:  "User doesn't exist",
@@ -37,8 +42,8 @@ func Publish(c *gin.Context) {
 		return
 	}
 	filename := data.Filename
-	user := userInfoList[token]
 	finalname := fmt.Sprintf("%d_%s", user.ID, filename)
+	creatFolder("./public/")
 	savefile := filepath.Join("./public/", finalname)
 	if err := c.SaveUploadedFile(data, savefile); err != nil {
 		c.JSON(http.StatusOK, Respon{
@@ -47,28 +52,38 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-	user.WorkCount++
-	userInfoList[token] = user
-	id := atomic.AddInt64(&videoIdSeq, 1)
-	videoList = append(videoList, Video{
-		Author:        user,
-		CommentCount:  0,
-		FavoriteCount: 0,
-		ID:            id,
-		IsFavorite:    false,
-		Title:         title,
-		PlayURL:       "http://" + c.Request.Host + "/static/" + finalname,
-	})
-	c.JSON(http.StatusOK, Respon{
-		StatusCode: 0,
-		StatusMsg:  filename + " uploaded successfully",
-	})
+	database.UpdateUserWorkcount(user.Name)
+	url := "http://" + c.Request.Host + "/static/" + finalname
+	err = database.InsertVideo(user.ID, title, url)
+	if err != nil {
+		c.JSON(http.StatusOK, Respon{
+			StatusCode: 1,
+			StatusMsg:  filename + " uploaded failed",
+		})
+	} else {
+		c.JSON(http.StatusOK, Respon{
+			StatusCode: 0,
+			StatusMsg:  filename + " uploaded successfully",
+		})
+	}
+}
+
+func creatFolder(folderPath string) {
+	_, err := os.Stat(folderPath)
+	if os.IsNotExist(err) {
+		// 文件夹不存在，创建文件夹
+		err := os.Mkdir(folderPath, 0755)
+		if err != nil {
+			fmt.Println("Error creating folder:", err)
+			return
+		}
+	}
 }
 
 type PublishRespon struct {
-	StatusCode int64   `json:"status_code"` // 状态码，0-成功，其他值-失败
-	StatusMsg  *string `json:"status_msg"`  // 返回状态描述
-	VideoList  []Video `json:"video_list"`  // 用户发布的视频列表
+	StatusCode int64            `json:"status_code"` // 状态码，0-成功，其他值-失败
+	StatusMsg  string           `json:"status_msg"`  // 返回状态描述
+	VideoList  []database.Video `json:"video_list"`  // 用户发布的视频列表
 }
 
 /*
@@ -79,7 +94,8 @@ type PublishRespon struct {
 func PublishList(c *gin.Context) {
 	token := c.Query("token")
 	id_str := c.Query("user_id")
-	if _, exist := userInfoList[token]; !exist {
+	_, err := database.QueryUserToken(token)
+	if err != nil {
 		c.JSON(http.StatusOK, Respon{
 			StatusCode: 1,
 			StatusMsg:  "User doesn't exist",
@@ -94,20 +110,19 @@ func PublishList(c *gin.Context) {
 		})
 		return
 	}
-	publish := getPublishList(id)
-	c.JSON(http.StatusOK, FeedResponse{
+	publish := getPublishList(token, id)
+	c.JSON(http.StatusOK, PublishRespon{
 		StatusCode: 0,
 		StatusMsg:  "",
 		VideoList:  publish,
 	})
 }
 
-func getPublishList(ID int64) []Video {
-	var list []Video
-	for _, video := range videoList {
-		if video.Author.ID == ID {
-			list = append(list, video)
-		}
+func getPublishList(token string, ID int64) []database.Video {
+	list, err := database.QueryVideoID(token, ID)
+	if err != nil {
+		fmt.Println(err)
+		return nil
 	}
-	return list
+	return *list
 }
