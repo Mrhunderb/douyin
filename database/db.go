@@ -1,12 +1,8 @@
 package database
 
 var dbUser string = "root"
-
-// var dbPass string = "886364"
-var dbPass string = "2790647786zzx"
-
-// var dbName string = "DOUYIN"
-var dbName string = "douyin"
+var dbPass string = "886364"
+var dbName string = "DOUYIN"
 var dbHost string = "localhost"
 var dbPort string = "3306"
 
