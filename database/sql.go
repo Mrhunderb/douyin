@@ -18,6 +18,7 @@ func TestConnection() {
 	CreateTable(userTable)
 	CreateTable(videoTable)
 	CreateTable(favoriteTable)
+	CreateTable(CommentTable)
 	db.Close()
 }
 
@@ -319,6 +320,93 @@ func QueryFavorite(token string) (*[]Video, error) {
 		return nil, err
 	}
 	return queryVideo(db, rows, token)
+}
+
+func InsertComment(token string, video_id int64, content string) (int64, error) {
+	db, err := connect()
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+	res, _ := db.Exec("INSERT INTO comments (token, video_id, content) VALUES (?, ?, ?)", token, video_id, content)
+	id, _ := res.LastInsertId()
+	return id, err
+}
+
+func DeleteComment(comment_id int64) error {
+	db, err := connect()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	_, err = db.Exec("DELETE FROM comments WHERE id = ?", comment_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func IncVideoComment(video_id int64) error {
+	db, err := connect()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	update := `
+	UPDATE video 
+	SET comment_count = comment_count + 1 
+	WHERE id = ?
+	`
+	_, err = db.Exec(update, video_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DecVideoComment(video_id int64) error {
+	db, err := connect()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	update := `
+	UPDATE video 
+	SET comment_count = comment_count - 1 
+	WHERE id = ?
+	`
+	_, err = db.Exec(update, video_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func QueryCommentsByVideoID(video_id int64) (*[]Comment, error) {
+	db, err := connect()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	rows, err := db.Query("SELECT * FROM comments WHERE video_id = ? ORDER BY create_date DESC", video_id)
+	if err != nil {
+		return nil, err
+	}
+	var commentList []Comment
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			comment Comment
+			token   string
+		)
+		err := rows.Scan(&comment.Id, &token, &video_id, &comment.Content, &comment.CreateDate)
+		if err != nil {
+			return nil, err
+		}
+		user, _ := QueryUserToken(token)
+		comment.User = *user
+	}
+	return &commentList, nil
 }
 
 func CreateTable(table string) {

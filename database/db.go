@@ -1,8 +1,12 @@
 package database
 
 var dbUser string = "root"
-var dbPass string = "886364"
-var dbName string = "DOUYIN"
+
+// var dbPass string = "886364"
+var dbPass string = "2790647786zzx"
+
+// var dbName string = "DOUYIN"
+var dbName string = "douyin"
 var dbHost string = "localhost"
 var dbPort string = "3306"
 
@@ -43,5 +47,15 @@ CREATE TABLE IF NOT EXISTS favorite(
 	video_id BIGINT NOT NULL,
 	PRIMARY KEY (token, video_id),
 	favorite_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+`
+
+var CommentTable = `
+CREATE TABLE IF NOT EXISTS comments(
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+	token VARCHAR(100) NOT NULL,
+	video_id BIGINT NOT NULL,
+	content VARCHAR(500) NOT NULL,
+	create_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 `
