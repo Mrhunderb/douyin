@@ -116,7 +116,7 @@ func CommentList(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, CommentListRespon{
 			StatusCode:  1,
-			StatusMsg:   "query failed",
+			StatusMsg:   "query successful",
 			CommentList: *commentList,
 		})
 	}
