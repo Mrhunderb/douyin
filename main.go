@@ -7,7 +7,7 @@ import (
 
 func main() {
 	r := gin.Default()
-	database.TestConnection()
+	database.ConnectDB()
 	initRouter(r)
 	r.Run()
 }

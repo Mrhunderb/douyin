@@ -52,9 +52,9 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-	database.UpdateUserWorkcount(user.Name)
+	database.IncUserWorkcount(user.Name)
 	url := "http://" + c.Request.Host + "/static/" + finalname
-	err = database.InsertVideo(user.ID, title, url)
+	err = database.InsertVideo(int64(user.ID), title, url)
 	if err != nil {
 		c.JSON(http.StatusOK, Respon{
 			StatusCode: 1,

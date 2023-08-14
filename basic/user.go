@@ -15,9 +15,9 @@ type UserRespon struct {
 }
 
 type InfoRespon struct {
-	StatusCode int64         `json:"status_code"`    // 状态码，0-成功，其他值-失败
-	StatusMsg  string        `json:"status_msg"`     // 返回状态描述
-	User       database.User `json:"user,omitempty"` // 用户信息
+	StatusCode int64  `json:"status_code"`    // 状态码，0-成功，其他值-失败
+	StatusMsg  string `json:"status_msg"`     // 返回状态描述
+	User       *User  `json:"user,omitempty"` // 用户信息
 }
 
 /*
@@ -28,15 +28,14 @@ type InfoRespon struct {
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-	user, _ := database.QueryUserName(username)
-	if user != nil {
+	if database.IsUserExsit(username) {
 		c.JSON(http.StatusOK, UserRespon{
 			StatusCode: 1,
 			StatusMsg:  "User already exist",
 		})
 	} else {
 		token := username + password
-		user, err := database.InsertUser(username, token)
+		id, err := database.InsertUser(username, token)
 		if err != nil {
 			c.JSON(http.StatusOK, UserRespon{
 				StatusCode: 1,
@@ -46,7 +45,7 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusOK, UserRespon{
 			StatusCode: 0,
 			StatusMsg:  "",
-			UserID:     user.ID,
+			UserID:     id,
 			Token:      token,
 		})
 	}
@@ -60,13 +59,13 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-	token := username + password
-	user, _ := database.QueryUserToken(token)
-	if user != nil {
+	if database.IsUserExsit(username) {
+		token := username + password
+		user, _ := database.QueryUserToken(token)
 		c.JSON(http.StatusOK, UserRespon{
 			StatusCode: 0,
 			StatusMsg:  "",
-			UserID:     user.ID,
+			UserID:     int64(user.ID),
 			Token:      token,
 		})
 	} else {
@@ -85,12 +84,12 @@ func Login(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	user_id := c.Query("user_id")
 	token := c.Query("token")
-	user, _ := database.QueryUserToken(token)
-	if user != nil {
+	user, err := database.QueryUserToken(token)
+	if err == nil {
 		c.JSON(http.StatusOK, InfoRespon{
 			StatusCode: 0,
 			StatusMsg:  "",
-			User:       *user,
+			User:       ConvertUser(user),
 		})
 	} else {
 		msg := "User " + user_id + " doesn't exist"
