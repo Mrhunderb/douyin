@@ -121,10 +121,16 @@ func IsFavorite(token string, video_id int64) bool {
 
 func QueryFavorite(token string) (*[]Video, error) {
 	var videolist []Video
-	// result := DB.Where("author = ?", user_id).Find(&videolist)
-	result := DB.Where("usr_token = ?", token).
-		Order("updated_at DESC").
-		Joins("JOIN videos ON favorites.video_id = videos.id").
+	// result := DB.Table("videos").Where("id IN (?)", DB.Table("favorites").Where("usr_token = ?", token)).
+	// 	Order("updated_at DESC").
+	// 	Find(&videolist)
+	result := DB.Table("videos").
+		Select("*").
+		Where("id IN (?)",
+			DB.Table("favorites").
+				Select("video_id").
+				Where("usr_token = ?", token).
+				Order("created_at DESC")).
 		Find(&videolist)
 	return &videolist, result.Error
 }

@@ -1,4 +1,4 @@
-package interact
+package basic
 
 import (
 	"fmt"
@@ -9,11 +9,6 @@ import (
 	"github.com/Mrhunderb/douyin/database"
 	"github.com/gin-gonic/gin"
 )
-
-type Respon struct {
-	StatusCode int64  `json:"status_code"` // 状态码，0-成功，其他值-失败
-	StatusMsg  string `json:"status_msg"`  // 返回状态描述
-}
 
 func FavoriteAction(c *gin.Context) {
 	token := c.Query("token")
@@ -66,9 +61,9 @@ func FavoriteAction(c *gin.Context) {
 }
 
 type FavoriteListRepson struct {
-	StatusCode int64            `json:"status_code"` // 状态码，0-成功，其他值-失败
-	StatusMsg  string           `json:"status_msg"`  // 返回状态描述
-	VideoList  []database.Video `json:"video_list"`  // 用户点赞视频列表
+	StatusCode int64   `json:"status_code"` // 状态码，0-成功，其他值-失败
+	StatusMsg  string  `json:"status_msg"`  // 返回状态描述
+	VideoList  []Video `json:"video_list"`  // 用户点赞视频列表
 }
 
 func FavoriteList(c *gin.Context) {
@@ -89,7 +84,6 @@ func FavoriteList(c *gin.Context) {
 		})
 		return
 	}
-	videolist, err := database.QueryFavorite(token)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusOK, FavoriteListRepson{
@@ -101,7 +95,19 @@ func FavoriteList(c *gin.Context) {
 		c.JSON(http.StatusOK, FavoriteListRepson{
 			StatusCode: 0,
 			StatusMsg:  "",
-			VideoList:  *videolist,
+			VideoList:  *getFavoritList(token),
 		})
 	}
+}
+
+func getFavoritList(token string) *[]Video {
+	favorite, err := database.QueryFavorite(token)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var list []Video
+	for _, vidoe := range *favorite {
+		list = append(list, *ConvertVideo(&vidoe, token))
+	}
+	return &list
 }
