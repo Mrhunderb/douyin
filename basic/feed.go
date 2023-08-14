@@ -40,9 +40,9 @@ func Feed(c *gin.Context) {
 
 func getVideoList(latest_time int64, token string) *[]Video {
 	// MySQL时间timestamp类型的最大值
-	if latest_time > 2147483647 {
-		latest_time = 2147483647
-	}
+	// if latest_time > 2147483647 {
+	// 	latest_time = 2147483647
+	// }
 	var list []Video
 	videos, err := database.QueryVideoTime(latest_time)
 	if err != nil {
@@ -50,7 +50,7 @@ func getVideoList(latest_time int64, token string) *[]Video {
 		return nil
 	}
 	for _, video := range *videos {
-		list = append(list, *ConvertVideo(&video))
+		list = append(list, *ConvertVideo(&video, token))
 	}
 	return &list
 }

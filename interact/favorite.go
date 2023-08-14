@@ -38,8 +38,8 @@ func FavoriteAction(c *gin.Context) {
 	}
 	if strings.Compare(action, "1") == 0 {
 		err = database.InsertFavorite(token, id)
-		database.IncVideoFavorite(id)
 		if err != nil {
+			database.IncVideoFavorite(id, 1)
 			fmt.Println(err.Error())
 			c.JSON(http.StatusOK, Respon{
 				StatusCode: 1,
@@ -49,8 +49,8 @@ func FavoriteAction(c *gin.Context) {
 		}
 	} else {
 		err = database.DeletFavorite(token, id)
-		database.DecVideoFavorite(id)
 		if err != nil {
+			database.IncVideoFavorite(id, -1)
 			fmt.Println(err.Error())
 			c.JSON(http.StatusOK, Respon{
 				StatusCode: 1,

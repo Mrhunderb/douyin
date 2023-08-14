@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 /*
@@ -40,8 +41,11 @@ func InsertUser(name, token string) (int64, error) {
 }
 
 func IsUserExsit(name string) bool {
-	result := DB.Where("name = ?", name).First(&User{})
-	return result.Error == nil
+	if err := DB.Where("name = ?", name).First(&User{}).Error; err != nil {
+		return false
+	} else {
+		return true
+	}
 }
 
 func QueryUserName(name string) (*User, error) {
@@ -78,7 +82,9 @@ func IncVideoFavorite(video_id, n int64) error {
 */
 func QueryVideoID(token string, user_id int64) (*[]Video, error) {
 	var videolist []Video
-	result := DB.Where("author = ?", user_id).Find(&videolist)
+	result := DB.Where("author = ?", user_id).
+		Order("updated_at DESC").
+		Find(&videolist)
 	return &videolist, result.Error
 }
 
@@ -87,7 +93,10 @@ func QueryVideoID(token string, user_id int64) (*[]Video, error) {
 */
 func QueryVideoTime(last_time int64) (*[]Video, error) {
 	var videolist []Video
-	result := DB.Where("updated_at < ?", last_time).Find(&videolist)
+	result := DB.Where("updated_at < ?", last_time).
+		Limit(30).
+		Order("updated_at DESC").
+		Find(&videolist)
 	return &videolist, result.Error
 }
 
@@ -100,13 +109,13 @@ func InsertFavorite(token string, video_id int64) error {
 }
 
 func DeletFavorite(token string, video_id int64) error {
-	result := DB.Where("token = ? AND video_id = ?", token, video_id).Delete(&Favorite{})
+	result := DB.Where("usr_token = ? AND video_id = ?", token, video_id).Delete(&Favorite{})
 	return result.Error
 }
 
 func IsFavorite(token string, video_id int64) bool {
 	var fav Favorite
-	result := DB.Where("token = ? AND video_id = ?", token, video_id).First(&fav)
+	result := DB.Where("usr_token = ? AND video_id = ?", token, video_id).First(&fav)
 	return result.Error == nil
 }
 
@@ -123,7 +132,9 @@ func QueryFavorite(token string) (*[]Video, error) {
 func ConnectDB() {
 	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbUser, dbPass, dbHost, dbPort, dbName)
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	if err != nil {
 		panic("failed to connect database")
 	}

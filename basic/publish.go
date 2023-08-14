@@ -52,7 +52,7 @@ func Publish(c *gin.Context) {
 		})
 		return
 	}
-	database.IncUserWorkcount(user.Name)
+	database.IncUserWorkcount(user.Token)
 	url := "http://" + c.Request.Host + "/static/" + finalname
 	err = database.InsertVideo(int64(user.ID), title, url)
 	if err != nil {
