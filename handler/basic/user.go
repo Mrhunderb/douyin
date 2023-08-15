@@ -15,9 +15,9 @@ type UserRespon struct {
 }
 
 type InfoRespon struct {
-	StatusCode int64  `json:"status_code"`    // 状态码，0-成功，其他值-失败
-	StatusMsg  string `json:"status_msg"`     // 返回状态描述
-	User       *User  `json:"user,omitempty"` // 用户信息
+	StatusCode int64              `json:"status_code"`    // 状态码，0-成功，其他值-失败
+	StatusMsg  string             `json:"status_msg"`     // 返回状态描述
+	User       *database.UserJSON `json:"user,omitempty"` // 用户信息
 }
 
 /*
@@ -89,7 +89,7 @@ func UserInfo(c *gin.Context) {
 		c.JSON(http.StatusOK, InfoRespon{
 			StatusCode: 0,
 			StatusMsg:  "",
-			User:       ConvertUser(user),
+			User:       database.ConvertUser(user),
 		})
 	} else {
 		msg := "User " + user_id + " doesn't exist"

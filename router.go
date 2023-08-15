@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/Mrhunderb/douyin/basic"
+	"github.com/Mrhunderb/douyin/handler/basic"
+	"github.com/Mrhunderb/douyin/handler/interact"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,16 +21,16 @@ func initRouter(r *gin.Engine) {
 	apiRouter.GET("/publish/list/", basic.PublishList)
 
 	// extra apis - I
-	apiRouter.POST("/favorite/action/", basic.FavoriteAction)
-	apiRouter.GET("/favorite/list/", basic.FavoriteList)
-	// apiRouter.POST("/comment/action/", controller.CommentAction)
-	// apiRouter.GET("/comment/list/", controller.CommentList)
+	apiRouter.POST("/favorite/action/", interact.FavoriteAction)
+	apiRouter.GET("/favorite/list/", interact.FavoriteList)
+	// apiRouter.POST("/comment/action/", interact.CommentAction)
+	// apiRouter.GET("/comment/list/", interact.CommentList)
 
 	// extra apis - II
-	// apiRouter.POST("/relation/action/", controller.RelationAction)
-	// apiRouter.GET("/relation/follow/list/", controller.FollowList)
-	// apiRouter.GET("/relation/follower/list/", controller.FollowerList)
-	// apiRouter.GET("/relation/friend/list/", controller.FriendList)
-	// apiRouter.GET("/message/chat/", controller.MessageChat)
-	// apiRouter.POST("/message/action/", controller.MessageAction)
+	// apiRouter.POST("/relation/action/", relation.RelationAction)
+	// apiRouter.GET("/relation/follow/list/", relation.FollowList)
+	// apiRouter.GET("/relation/follower/list/", relation.FollowerList)
+	// apiRouter.GET("/relation/friend/list/", relation.FriendList)
+	// apiRouter.GET("/message/chat/", relation.MessageChat)
+	// apiRouter.POST("/message/action/", relation.MessageAction)
 }

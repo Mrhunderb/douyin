@@ -1,4 +1,4 @@
-package basic
+package interact
 
 import "github.com/gin-gonic/gin"
 

@@ -1,4 +1,4 @@
-package basic
+package relation
 
 import "github.com/gin-gonic/gin"
 
