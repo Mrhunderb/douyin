@@ -5,7 +5,6 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 /*
@@ -18,6 +17,17 @@ func IncUserWorkcount(token string) error {
 		return result.Error
 	}
 	user.WorkCount += 1
+	result = DB.Save(user)
+	return result.Error
+}
+
+func IncUserFavorite(token string, n int64) error {
+	var user User
+	result := DB.Where("token = ?", token).First(&user)
+	if result.Error != nil {
+		return result.Error
+	}
+	user.FavoriteCount += n
 	result = DB.Save(user)
 	return result.Error
 }
@@ -83,7 +93,7 @@ func IncVideoFavorite(video_id, n int64) error {
 func QueryVideoID(token string, user_id int64) (*[]Video, error) {
 	var videolist []Video
 	result := DB.Where("author = ?", user_id).
-		Order("updated_at DESC").
+		Order("created_at DESC").
 		Find(&videolist)
 	return &videolist, result.Error
 }
@@ -95,7 +105,7 @@ func QueryVideoTime(last_time int64) (*[]Video, error) {
 	var videolist []Video
 	result := DB.Where("updated_at < ?", last_time).
 		Limit(30).
-		Order("updated_at DESC").
+		Order("created_at DESC").
 		Find(&videolist)
 	return &videolist, result.Error
 }
@@ -121,14 +131,12 @@ func IsFavorite(token string, video_id int64) bool {
 
 func QueryFavorite(token string) (*[]Video, error) {
 	var videolist []Video
-	// result := DB.Table("videos").Where("id IN (?)", DB.Table("favorites").Where("usr_token = ?", token)).
-	// 	Order("updated_at DESC").
-	// 	Find(&videolist)
 	result := DB.Table("videos").
 		Select("*").
 		Where("id IN (?)",
 			DB.Table("favorites").
 				Select("video_id").
+				Where("deleted_at IS NULL").
 				Where("usr_token = ?", token).
 				Order("created_at DESC")).
 		Find(&videolist)
@@ -139,7 +147,7 @@ func ConnectDB() {
 	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbUser, dbPass, dbHost, dbPort, dbName)
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		// Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
 		panic("failed to connect database")

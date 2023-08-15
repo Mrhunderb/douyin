@@ -34,7 +34,7 @@ func ConvertVideo(video *database.Video, token string) *Video {
 type User struct {
 	Avatar          string `json:"avatar,omitempty"`           // 用户头像
 	BackgroundImage string `json:"background_image,omitempty"` // 用户个人页顶部大图
-	FavoriteCount   int64  `json:"favorite_count,omitempty"`   // 喜欢数
+	FavoriteCount   int64  `json:"favorite_count"`             // 喜欢数
 	FollowCount     int64  `json:"follow_count"`               // 关注总数
 	FollowerCount   int64  `json:"follower_count"`             // 粉丝总数
 	ID              int64  `json:"id"`                         // 用户id
@@ -50,7 +50,7 @@ func ConvertUser(user *database.User) *User {
 		ID:              int64(user.ID),
 		Avatar:          "",
 		BackgroundImage: "",
-		FavoriteCount:   user.FollowCount,
+		FavoriteCount:   user.FavoriteCount,
 		FollowCount:     user.FollowCount,
 		FollowerCount:   user.FollowerCount,
 		IsFollow:        false,
